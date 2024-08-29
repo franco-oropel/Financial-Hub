@@ -3,6 +3,7 @@ package com.financialhub.app.controllers;
 import com.financialhub.app.dto.request.AccountRequestDto;
 import com.financialhub.app.dto.response.AccountResponseDto;
 import com.financialhub.app.services.AccountService;
+import com.financialhub.app.util.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,61 +20,73 @@ public class AccountController {
     private AccountService accountService;
 
     @GetMapping
-    public ResponseEntity<List<AccountResponseDto>> getAllAccounts(){
+    public ResponseEntity<ApiResponse<List<AccountResponseDto>>> getAllAccounts(){
         try {
             List<AccountResponseDto> accounts = accountService.getAllAccounts();
-            return new ResponseEntity<>(accounts, HttpStatus.OK);
+            ApiResponse<List<AccountResponseDto>> response = new ApiResponse<>("Accounts retrieved successfully", "success", accounts);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            ApiResponse<List<AccountResponseDto>> response = new ApiResponse<>(e.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<AccountResponseDto>> getAccountById(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<Optional<AccountResponseDto>>> getAccountById(@PathVariable Long id){
         try {
             Optional<AccountResponseDto> account = accountService.getAccountById(id);
             if(account.isPresent()){
-                return new ResponseEntity<>(account, HttpStatus.OK);
+                ApiResponse<Optional<AccountResponseDto>> response = new ApiResponse<>("Account found successfully","success", account);
+                return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                ApiResponse<Optional<AccountResponseDto>> response = new ApiResponse<>("Account not found","success", null);
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
         } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            ApiResponse<Optional<AccountResponseDto>> response = new ApiResponse<>(e.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping
-    public ResponseEntity<String> createAccount(@RequestBody AccountRequestDto accountRequestDto){
+    public ResponseEntity<ApiResponse<Optional<AccountResponseDto>>> createAccount(@RequestBody AccountRequestDto accountRequestDto){
         try {
-            accountService.createAccount(accountRequestDto);
-            return new ResponseEntity<>("Account created successfully", HttpStatus.CREATED);
+            Optional<AccountResponseDto> createdAccount = accountService.createAccount(accountRequestDto);
+            ApiResponse<Optional<AccountResponseDto>> response = new ApiResponse<>("Account created successfully", "success", createdAccount);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (Exception e){
-            return new ResponseEntity<>("Error creating account: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            ApiResponse<Optional<AccountResponseDto>> response = new ApiResponse<>("Error creating account: " + e.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateAccount(@PathVariable Long id, @RequestBody AccountRequestDto accountRequestDto){
+    public ResponseEntity<ApiResponse<AccountResponseDto>> updateAccount(@PathVariable Long id, @RequestBody AccountRequestDto accountRequestDto){
         try {
-            accountService.updateAccount(id, accountRequestDto);
-            return new ResponseEntity<>("Account updated successfully", HttpStatus.OK);
+            AccountResponseDto updateAccount = accountService.updateAccount(id, accountRequestDto);
+            ApiResponse<AccountResponseDto> response = new ApiResponse<>("Account updated successfully", "success", updateAccount);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e){
-            return new ResponseEntity<>("Error updating account: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            ApiResponse<AccountResponseDto> response = new ApiResponse<>("Error updating account: " + e.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAccount(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(@PathVariable Long id){
         try {
             Optional<AccountResponseDto> existAccount = accountService.getAccountById(id);
             if(existAccount.isPresent()){
                 accountService.deleteAccount(id);
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                ApiResponse<Void> response = new ApiResponse<>("Account deleted successfully", "success", null);
+                return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                ApiResponse<Void> response = new ApiResponse<>("Account not found", "success", null);
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
         } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            ApiResponse<Void> response = new ApiResponse<>("Error deleting account: " + e.getMessage(), "success", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

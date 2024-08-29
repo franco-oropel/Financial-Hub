@@ -36,23 +36,26 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void createAccount(AccountRequestDto accountRequestDto) {
+    public Optional<AccountResponseDto> createAccount(AccountRequestDto accountRequestDto) {
         Account account = accountMapper.mapToEntity(accountRequestDto);
-        accountRepository.save(account);
+        Account createdAccount = accountRepository.save(account);
+        return getAccountById(createdAccount.getId());
     }
 
     @Override
-    public void updateAccount(Long id, AccountRequestDto updatedAccountRequestDto) {
+    public AccountResponseDto updateAccount(Long id, AccountRequestDto updatedAccountRequestDto) {
         Optional<Account> optionalAccount = accountRepository.findById(id);
 
-        if (optionalAccount.isPresent()){
-           Account account = optionalAccount.get();
-           account.setAccountHolderName(updatedAccountRequestDto.getAccountHolderName());
-           account.setBalance(updatedAccountRequestDto.getBalance());
-           account.setOpeningDate(updatedAccountRequestDto.getOpeningDate());
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            account.setAccountHolderName(updatedAccountRequestDto.getAccountHolderName());
+            account.setBalance(updatedAccountRequestDto.getBalance());
+            account.setOpeningDate(updatedAccountRequestDto.getOpeningDate());
 
-           accountRepository.save(account);
+            accountRepository.save(account);
+            return accountMapper.mapToDto(account);
         }
+        return accountMapper.mapToDto(optionalAccount.get());
     }
 
     @Override

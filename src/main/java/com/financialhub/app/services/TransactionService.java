@@ -9,7 +9,5 @@ import java.util.Optional;
 public interface TransactionService {
     List<TransactionResponseDto> getAllTransactions();
     Optional<TransactionResponseDto> getTransactionById(Long id);
-    void createTransaction(TransactionRequestDto transactionRequestDto);
-    void updateTransaction(Long id, TransactionRequestDto updatedTransactionRequestDto);
-    void deleteTransaction(Long id);
+    Optional<TransactionResponseDto> createTransaction(TransactionRequestDto transactionRequestDto);
 }

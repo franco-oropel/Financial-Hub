@@ -35,28 +35,10 @@ public class TransactionServiceImpl implements TransactionService {
     };
 
     @Override
-    public void createTransaction(TransactionRequestDto transactionRequestDto){
+    public Optional<TransactionResponseDto> createTransaction(TransactionRequestDto transactionRequestDto){
         Transaction transaction = transactionMapper.mapToEntity(transactionRequestDto);
-        transactionRepository.save(transaction);
-    };
-
-    @Override
-    public void updateTransaction(Long id, TransactionRequestDto updatedTransactionRequestDto){
-        Optional<Transaction> optionalTransaction = transactionRepository.findById(id);
-
-        if (optionalTransaction.isPresent()){
-            Transaction transaction = optionalTransaction.get();
-            transaction.setType(updatedTransactionRequestDto.getType());
-            transaction.setAmount(updatedTransactionRequestDto.getAmount());
-            transaction.setDate(updatedTransactionRequestDto.getDate());
-
-            this.transactionRepository.save(transaction);
-        }
-    };
-
-    @Override
-    public void deleteTransaction(Long id){
-        this.transactionRepository.deleteById(id);
+        Transaction createdTransaction = transactionRepository.save(transaction);
+        return getTransactionById(createdTransaction.getId());
     };
 
     private List<TransactionResponseDto> mapToDTOList(List<Transaction> transactions){

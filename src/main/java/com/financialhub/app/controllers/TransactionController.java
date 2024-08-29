@@ -3,6 +3,7 @@ package com.financialhub.app.controllers;
 import com.financialhub.app.dto.request.TransactionRequestDto;
 import com.financialhub.app.dto.response.TransactionResponseDto;
 import com.financialhub.app.services.impl.TransactionService;
+import com.financialhub.app.util.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,63 +20,44 @@ public class TransactionController {
     private TransactionService transactionService;
 
     @GetMapping
-    public ResponseEntity<List<TransactionResponseDto>> getAllTransactions(){
+    public ResponseEntity<ApiResponse<List<TransactionResponseDto>>> getAllTransactions(){
         try{
             List<TransactionResponseDto> transactions = transactionService.getAllTransactions();
-            return new ResponseEntity<>(transactions, HttpStatus.OK);
+            ApiResponse<List<TransactionResponseDto>> response = new ApiResponse<>("Transactions retrieved successfully", "success", transactions);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            ApiResponse<List<TransactionResponseDto>> response = new ApiResponse<>(e.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<TransactionResponseDto>> getTransactionById(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<Optional<TransactionResponseDto>>> getTransactionById(@PathVariable Long id){
         try{
             Optional<TransactionResponseDto> transaction = transactionService.getTransactionById(id);
             if(transaction.isPresent()){
-                return new ResponseEntity<>(transaction, HttpStatus.OK);
+                ApiResponse<Optional<TransactionResponseDto>> response = new ApiResponse<>("Transaction found successfully","success", transaction);
+                return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                ApiResponse<Optional<TransactionResponseDto>> response = new ApiResponse<>("Transaction not found","success", null);
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
         } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            ApiResponse<Optional<TransactionResponseDto>> response = new ApiResponse<>(e.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping
-    public ResponseEntity<String> createTransaction(@RequestBody TransactionRequestDto transactionRequestDto){
+    public ResponseEntity<ApiResponse<Optional<TransactionResponseDto>>> createTransaction(@RequestBody TransactionRequestDto transactionRequestDto){
         try{
-            transactionService.createTransaction(transactionRequestDto);
-            return new ResponseEntity<>("Transaction created successfully", HttpStatus.CREATED);
+            Optional<TransactionResponseDto> createdTransaction = transactionService.createTransaction(transactionRequestDto);
+            ApiResponse<Optional<TransactionResponseDto>> response = new ApiResponse<>("Transaction created successfully", "success", createdTransaction);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (Exception e){
-            return new ResponseEntity<>("Error creating transaction: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            ApiResponse<Optional<TransactionResponseDto>> response = new ApiResponse<>("Error creating transaction: " + e.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-
-    @PutMapping("/{id}")
-    public ResponseEntity<String> updateTransaction(@PathVariable Long id, @RequestBody TransactionRequestDto transactionRequestDto){
-        try {
-            transactionService.updateTransaction(id,transactionRequestDto);
-            return new ResponseEntity<>("Transaction updated successfully", HttpStatus.OK);
-        } catch (Exception e){
-            return new ResponseEntity<>("Error updating transaction: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id){
-        try {
-            Optional<TransactionResponseDto> existTransaction = transactionService.getTransactionById(id);
-            if(existTransaction.isPresent()){
-                transactionService.deleteTransaction(id);
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 }
