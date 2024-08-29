@@ -3,7 +3,9 @@ package com.financialhub.app.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Entity
@@ -17,4 +19,7 @@ public class Account {
     private Double balance;
     @Column(name = "opening_date")
     private Date openingDate;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Transaction> transactions = new ArrayList<>();
 }

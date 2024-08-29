@@ -1,52 +1,69 @@
 package com.financialhub.app.services.impl;
 
+import com.financialhub.app.dto.request.AccountRequestDto;
+import com.financialhub.app.dto.response.AccountResponseDto;
 import com.financialhub.app.entities.Account;
+import com.financialhub.app.mapper.AccountMapper;
 import com.financialhub.app.repositories.AccountRepository;
 import com.financialhub.app.services.AccountService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
+    private final AccountMapper accountMapper;
 
-    public AccountServiceImpl(AccountRepository accountRepository) {
+    public AccountServiceImpl(AccountRepository accountRepository, AccountMapper accountMapper) {
         this.accountRepository = accountRepository;
+        this.accountMapper = accountMapper;
     }
 
     @Override
-    public List<Account> getAllAccounts() {
-        return (List<Account>) this.accountRepository.findAll();
+    public List<AccountResponseDto> getAllAccounts() {
+        List<Account> accounts = (List<Account>) accountRepository.findAll();
+        return mapToDTOList(accounts);
     }
 
     @Override
-    public Optional<Account> getAccountById(Long id) {
-        return this.accountRepository.findById(id);
+    public Optional<AccountResponseDto> getAccountById(Long id) {
+        Optional<Account> account = accountRepository.findById(id);
+        // Map only if the Optional has a present value
+        return account.map(accountMapper::mapToDto);
     }
 
     @Override
-    public void createAccount(Account account) {
-        this.accountRepository.save(account);
+    public void createAccount(AccountRequestDto accountRequestDto) {
+        Account account = accountMapper.mapToEntity(accountRequestDto);
+        accountRepository.save(account);
     }
 
     @Override
-    public void updateAccount(Long id, Account updatedAccount) {
-        Optional<Account> optionalAccount = this.accountRepository.findById(id);
+    public void updateAccount(Long id, AccountRequestDto updatedAccountRequestDto) {
+        Optional<Account> optionalAccount = accountRepository.findById(id);
 
         if (optionalAccount.isPresent()){
            Account account = optionalAccount.get();
-           account.setAccountHolderName(updatedAccount.getAccountHolderName());
-           account.setBalance(updatedAccount.getBalance());
-           account.setOpeningDate(updatedAccount.getOpeningDate());
+           account.setAccountHolderName(updatedAccountRequestDto.getAccountHolderName());
+           account.setBalance(updatedAccountRequestDto.getBalance());
+           account.setOpeningDate(updatedAccountRequestDto.getOpeningDate());
 
-           this.accountRepository.save(account);
+           accountRepository.save(account);
         }
     }
 
     @Override
     public void deleteAccount(Long id) {
-        this.accountRepository.deleteById(id);
+        accountRepository.deleteById(id);
+    }
+
+    private List<AccountResponseDto> mapToDTOList(List<Account> accounts){
+        return accounts.stream()
+                //.map(a -> accountMapper.mapToDto(a))
+                .map(accountMapper::mapToDto)
+                .collect(Collectors.toList());
     }
 }

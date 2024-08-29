@@ -1,5 +1,6 @@
 package com.financialhub.app.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -15,4 +16,9 @@ public class Transaction {
     private String type;
     private Double amount;
     private Date date;
+
+    @ManyToOne
+    @JoinColumn(name = "account_id")
+    @JsonIgnore
+    private Account account;
 }
