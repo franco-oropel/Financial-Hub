@@ -2,8 +2,10 @@ package com.financialhub.app.controllers;
 
 import com.financialhub.app.dto.request.AccountRequestDto;
 import com.financialhub.app.dto.response.AccountResponseDto;
+import com.financialhub.app.exceptions.AccountException;
 import com.financialhub.app.services.AccountService;
 import com.financialhub.app.util.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,11 +51,14 @@ public class AccountController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Optional<AccountResponseDto>>> createAccount(@RequestBody AccountRequestDto accountRequestDto){
+    public ResponseEntity<ApiResponse<Optional<AccountResponseDto>>> createAccount(@RequestBody @Valid AccountRequestDto accountRequestDto){
         try {
             Optional<AccountResponseDto> createdAccount = accountService.createAccount(accountRequestDto);
             ApiResponse<Optional<AccountResponseDto>> response = new ApiResponse<>("Account created successfully", "success", createdAccount);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (AccountException ae){
+            ApiResponse<Optional<AccountResponseDto>> response = new ApiResponse<>("Error creating account: " + ae.getMessage(), "error", null);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (Exception e){
             ApiResponse<Optional<AccountResponseDto>> response = new ApiResponse<>("Error creating account: " + e.getMessage(),"error", null);
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -61,11 +66,14 @@ public class AccountController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<AccountResponseDto>> updateAccount(@PathVariable Long id, @RequestBody AccountRequestDto accountRequestDto){
+    public ResponseEntity<ApiResponse<AccountResponseDto>> updateAccount(@PathVariable Long id, @RequestBody @Valid AccountRequestDto accountRequestDto){
         try {
             AccountResponseDto updateAccount = accountService.updateAccount(id, accountRequestDto);
             ApiResponse<AccountResponseDto> response = new ApiResponse<>("Account updated successfully", "success", updateAccount);
             return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (AccountException ae){
+            ApiResponse<AccountResponseDto> response = new ApiResponse<>("Error updating account: " + ae.getMessage(), "error", null);
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         } catch (Exception e){
             ApiResponse<AccountResponseDto> response = new ApiResponse<>("Error updating account: " + e.getMessage(),"error", null);
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);

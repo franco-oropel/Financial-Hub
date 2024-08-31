@@ -2,8 +2,10 @@ package com.financialhub.app.controllers;
 
 import com.financialhub.app.dto.request.TransactionRequestDto;
 import com.financialhub.app.dto.response.TransactionResponseDto;
+import com.financialhub.app.exceptions.TransactionException;
 import com.financialhub.app.services.impl.TransactionService;
 import com.financialhub.app.util.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,15 +51,17 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Optional<TransactionResponseDto>>> createTransaction(@RequestBody TransactionRequestDto transactionRequestDto){
+    public ResponseEntity<ApiResponse<Optional<TransactionResponseDto>>> createTransaction(@RequestBody @Valid TransactionRequestDto transactionRequestDto){
         try{
             Optional<TransactionResponseDto> createdTransaction = transactionService.createTransaction(transactionRequestDto);
             ApiResponse<Optional<TransactionResponseDto>> response = new ApiResponse<>("Transaction created successfully", "success", createdTransaction);
             return new ResponseEntity<>(response, HttpStatus.CREATED);
-        } catch (Exception e){
+        } catch (TransactionException te) {
+            ApiResponse<Optional<TransactionResponseDto>> response = new ApiResponse<>("Error creating transaction: " + te.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
             ApiResponse<Optional<TransactionResponseDto>> response = new ApiResponse<>("Error creating transaction: " + e.getMessage(),"error", null);
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 }

@@ -3,6 +3,7 @@ package com.financialhub.app.services.impl;
 import com.financialhub.app.dto.request.AccountRequestDto;
 import com.financialhub.app.dto.response.AccountResponseDto;
 import com.financialhub.app.entities.Account;
+import com.financialhub.app.exceptions.AccountException;
 import com.financialhub.app.mapper.AccountMapper;
 import com.financialhub.app.repositories.AccountRepository;
 import com.financialhub.app.services.AccountService;
@@ -36,26 +37,33 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Optional<AccountResponseDto> createAccount(AccountRequestDto accountRequestDto) {
+    public Optional<AccountResponseDto> createAccount(AccountRequestDto accountRequestDto) throws AccountException {
+
+        // Validation of account uniqueness by type and name of the holder
+        boolean exists = accountRepository.existsByTypeAndAccountHolderName(accountRequestDto.getType(), accountRequestDto.getAccountHolderName());
+        if (exists) { throw new AccountException("Account with the same type and name of holder already exists."); }
+
         Account account = accountMapper.mapToEntity(accountRequestDto);
         Account createdAccount = accountRepository.save(account);
         return getAccountById(createdAccount.getId());
     }
 
     @Override
-    public AccountResponseDto updateAccount(Long id, AccountRequestDto updatedAccountRequestDto) {
+    public AccountResponseDto updateAccount(Long id, AccountRequestDto updatedAccountRequestDto) throws AccountException {
         Optional<Account> optionalAccount = accountRepository.findById(id);
 
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
             account.setAccountHolderName(updatedAccountRequestDto.getAccountHolderName());
+            account.setType(updatedAccountRequestDto.getType());
             account.setBalance(updatedAccountRequestDto.getBalance());
             account.setOpeningDate(updatedAccountRequestDto.getOpeningDate());
 
             accountRepository.save(account);
             return accountMapper.mapToDto(account);
+        } else {
+            throw new AccountException("Account not found");
         }
-        return accountMapper.mapToDto(optionalAccount.get());
     }
 
     @Override

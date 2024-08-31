@@ -2,8 +2,11 @@ package com.financialhub.app.services.impl;
 
 import com.financialhub.app.dto.request.TransactionRequestDto;
 import com.financialhub.app.dto.response.TransactionResponseDto;
+import com.financialhub.app.entities.Account;
 import com.financialhub.app.entities.Transaction;
+import com.financialhub.app.exceptions.TransactionException;
 import com.financialhub.app.mapper.TransactionMapper;
+import com.financialhub.app.repositories.AccountRepository;
 import com.financialhub.app.repositories.TransactionRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,10 +18,12 @@ import java.util.stream.Collectors;
 public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
+    private final AccountRepository accountRepository;
 
-    public TransactionServiceImpl(TransactionRepository transactionRepository, TransactionMapper transactionMapper) {
+    public TransactionServiceImpl(TransactionRepository transactionRepository, TransactionMapper transactionMapper, AccountRepository accountRepository) {
         this.transactionRepository = transactionRepository;
         this.transactionMapper = transactionMapper;
+        this.accountRepository = accountRepository;
     }
 
     @Override
@@ -35,9 +40,25 @@ public class TransactionServiceImpl implements TransactionService {
     };
 
     @Override
-    public Optional<TransactionResponseDto> createTransaction(TransactionRequestDto transactionRequestDto){
+    public Optional<TransactionResponseDto> createTransaction(TransactionRequestDto transactionRequestDto) throws TransactionException {
+        // Account Validation
+        Account account = accountRepository.findById(transactionRequestDto.getAccount().getId()).orElseThrow(() -> new TransactionException("Account not found"));
+
+        // Balance Account validation based on transaction type
+        String transactionType = transactionRequestDto.getType().toLowerCase();
+        if (transactionType.equalsIgnoreCase("deposit") || transactionType.equalsIgnoreCase("collection")) {
+            account.setBalance(account.getBalance() + transactionRequestDto.getAmount());
+        } else {
+            // transactionType = "withdrawal" || "transfer" || "payment"
+            if (account.getBalance() < transactionRequestDto.getAmount()) {
+                throw new TransactionException("Insufficient account balance to " + transactionType);
+            }
+            account.setBalance(account.getBalance() - transactionRequestDto.getAmount());
+        }
+
         Transaction transaction = transactionMapper.mapToEntity(transactionRequestDto);
         Transaction createdTransaction = transactionRepository.save(transaction);
+        accountRepository.save(account);
         return getTransactionById(createdTransaction.getId());
     };
 
