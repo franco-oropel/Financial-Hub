@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface AccountService {
     List<AccountResponseDto> getAllAccounts();
     Optional<AccountResponseDto> getAccountById(Long id);
+    List<AccountResponseDto> getAccountsByAccountHolderName(String accountHolderName);
     Optional<AccountResponseDto> createAccount(AccountRequestDto accountRequestDto) throws AccountException;
     AccountResponseDto updateAccount(Long id, AccountRequestDto updatedAccountRequestDto) throws AccountException;
     void deleteAccount(Long id);

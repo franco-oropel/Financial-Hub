@@ -50,6 +50,23 @@ public class AccountController {
         }
     }
 
+    @GetMapping("/searchBy")
+    public ResponseEntity<ApiResponse<List<AccountResponseDto>>> getAccountsByAccountHolderName(@RequestParam String accountHolderName){
+        try {
+            List<AccountResponseDto> accounts = accountService.getAccountsByAccountHolderName(accountHolderName);
+            if(!accounts.isEmpty()){
+                ApiResponse<List<AccountResponseDto>> response = new ApiResponse<>("Accounts found successfully","success", accounts);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                ApiResponse<List<AccountResponseDto>> response = new ApiResponse<>("No accounts found","success", null);
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e){
+            ApiResponse<List<AccountResponseDto>> response = new ApiResponse<>(e.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<Optional<AccountResponseDto>>> createAccount(@RequestBody @Valid AccountRequestDto accountRequestDto){
         try {

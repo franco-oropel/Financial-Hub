@@ -7,10 +7,12 @@ import com.financialhub.app.services.impl.TransactionService;
 import com.financialhub.app.util.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,6 +48,21 @@ public class TransactionController {
             }
         } catch (Exception e){
             ApiResponse<Optional<TransactionResponseDto>> response = new ApiResponse<>(e.getMessage(),"error", null);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/searchBy")
+    public ResponseEntity<ApiResponse<List<TransactionResponseDto>>> getTransactionsByDateRangeAndAccount(
+            @RequestParam Long accountId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startDate,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endDate){
+        try{
+            List<TransactionResponseDto> transactions = transactionService.getTransactionsByDateRangeAndAccount(accountId, startDate, endDate);
+            ApiResponse<List<TransactionResponseDto>> response = new ApiResponse<>("Transactions found successfully", "success", transactions);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e){
+            ApiResponse<List<TransactionResponseDto>> response = new ApiResponse<>(e.getMessage(),"error", null);
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

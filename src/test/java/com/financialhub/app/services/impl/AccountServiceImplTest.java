@@ -97,6 +97,34 @@ class AccountServiceImplTest {
     }
 
     @Test
+    @DisplayName("getAccountsByAccountHolderName: should return account when found by AccountHolderName")
+    void testGetAccountsByAccountHolderNameFound() {
+        when(accountRepository.findByAccountHolderName("John Doe")).thenReturn(List.of(account));
+        when(accountMapper.mapToDto(account)).thenReturn(accountResponseDto);
+
+        List<AccountResponseDto> result = accountService.getAccountsByAccountHolderName("John Doe");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(accountResponseDto, result.get(0));
+        verify(accountRepository, times(1)).findByAccountHolderName("John Doe");
+        verify(accountMapper, times(1)).mapToDto(account);
+    }
+
+    @Test
+    @DisplayName("getAccountsByAccountHolderName: should return empty list when no accounts found by AccountHolderName")
+    void testGetAccountsByAccountHolderNameNotFound() {
+        when(accountRepository.findByAccountHolderName("Jane Doe")).thenReturn(List.of());
+
+        List<AccountResponseDto> result = accountService.getAccountsByAccountHolderName("Jane Doe");
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(accountRepository, times(1)).findByAccountHolderName("Jane Doe");
+        verify(accountMapper, never()).mapToDto(any());
+    }
+
+    @Test
     @DisplayName("createAccount: should create successfully")
     void testCreateAccountSuccess() throws AccountException {
         when(accountRepository.existsByTypeAndAccountHolderName("Savings", "John Doe")).thenReturn(false);

@@ -94,6 +94,26 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("getTransactionsByDateRangeAndAccount: should return transactions successfully")
+    void testGetTransactionsByDateRangeAndAccount() {
+        Transaction transaction = new Transaction();
+        transaction.setId(1L);
+        transaction.setType("deposit");
+        TransactionResponseDto transactionResponseDto = new TransactionResponseDto();
+        transactionResponseDto.setId(1L);
+        transactionResponseDto.setType("deposit");
+
+        when(transactionRepository.findTransactionsByDateRangeAndAccount(anyLong(), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(List.of(transaction));
+        when(transactionMapper.mapToDto(transaction)).thenReturn(transactionResponseDto);
+
+        List<TransactionResponseDto> result = transactionService.getTransactionsByDateRangeAndAccount(1L, LocalDateTime.now().minusDays(1), LocalDateTime.now());
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("deposit", result.get(0).getType());
+    }
+
+    @Test
     @DisplayName("createTransaction: should create successfully")
     void testCreateTransactionSuccess() throws TransactionException {
         // Request DTO

@@ -10,6 +10,7 @@ import com.financialhub.app.repositories.AccountRepository;
 import com.financialhub.app.repositories.TransactionRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -37,6 +38,12 @@ public class TransactionServiceImpl implements TransactionService {
         Optional<Transaction> transaction = transactionRepository.findById(id);
         // Map only if the Optional has a present value
         return transaction.map(transactionMapper::mapToDto);
+    };
+
+    @Override
+    public List<TransactionResponseDto> getTransactionsByDateRangeAndAccount(Long accountId, LocalDateTime startDate, LocalDateTime endDate){
+        List<Transaction> transactions = transactionRepository.findTransactionsByDateRangeAndAccount(accountId, startDate, endDate);
+        return mapToDTOList(transactions);
     };
 
     @Override

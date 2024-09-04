@@ -114,6 +114,41 @@ class AccountControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("GET /api/v1/accounts/searchBy - Accounts Found")
+    void testGetAccountsByAccountHolderNameFound() throws Exception {
+        AccountResponseDto accountResponseDto = new AccountResponseDto();
+        accountResponseDto.setId(1L);
+        accountResponseDto.setAccountHolderName("John Doe");
+        accountResponseDto.setType("Savings");
+        accountResponseDto.setBalance(1000.0);
+
+        when(accountService.getAccountsByAccountHolderName("John Doe")).thenReturn(List.of(accountResponseDto));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/accounts/searchBy")
+                        .param("accountHolderName", "John Doe")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("Accounts found successfully"))
+                .andExpect(jsonPath("$.data[0].id").value(1L))
+                .andExpect(jsonPath("$.data[0].accountHolderName").value("John Doe"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/accounts/searchBy - No Accounts Found")
+    void testGetAccountsByAccountHolderNameNotFound() throws Exception {
+        when(accountService.getAccountsByAccountHolderName("Jane Doe")).thenReturn(List.of());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/accounts/searchBy")
+                        .param("accountHolderName", "Jane Doe")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("No accounts found"))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
     @DisplayName("POST /api/v1/accounts - Create Account Error")
     void testCreateAccountError() throws Exception {
         when(accountService.createAccount(any(AccountRequestDto.class)))

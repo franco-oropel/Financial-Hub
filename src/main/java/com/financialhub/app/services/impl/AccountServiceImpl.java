@@ -37,6 +37,12 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public List<AccountResponseDto> getAccountsByAccountHolderName(String accountHolderName) {
+        List<Account> accounts = accountRepository.findByAccountHolderName(accountHolderName);
+        return mapToDTOList(accounts);
+    }
+
+    @Override
     public Optional<AccountResponseDto> createAccount(AccountRequestDto accountRequestDto) throws AccountException {
 
         // Validation of account uniqueness by type and name of the holder

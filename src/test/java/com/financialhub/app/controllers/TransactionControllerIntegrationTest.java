@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -100,6 +101,54 @@ class TransactionControllerIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message").value("Transaction not found"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/transactions/searchBy - Success")
+    void testGetTransactionsByDateRangeAndAccount() throws Exception {
+        // Arrange
+        Long accountId = 1L;
+        LocalDateTime startDate = LocalDateTime.parse("2021-01-01T00:00:00");
+        LocalDateTime endDate = LocalDateTime.parse("2021-12-31T23:59:59");
+
+        TransactionResponseDto transaction1 = new TransactionResponseDto();
+        transaction1.setId(1L);
+        transaction1.setType("deposit");
+        transaction1.setAmount(500.0);
+        transaction1.setDate(LocalDateTime.parse("2021-06-15T10:15:30"));
+        transaction1.setAccount(new Account());
+
+        TransactionResponseDto transaction2 = new TransactionResponseDto();
+        transaction2.setId(2L);
+        transaction2.setType("withdrawal");
+        transaction2.setAmount(200.0);
+        transaction2.setDate(LocalDateTime.parse("2021-07-20T14:20:45"));
+        transaction2.setAccount(new Account());
+
+        List<TransactionResponseDto> transactions = Arrays.asList(transaction1, transaction2);
+
+        when(transactionService.getTransactionsByDateRangeAndAccount(accountId, startDate, endDate))
+                .thenReturn(transactions);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/transactions/searchBy")
+                        .param("accountId", accountId.toString())
+                        .param("startDate", "2021-01-01 00:00:00")
+                        .param("endDate", "2021-12-31 23:59:59")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("Transactions found successfully"))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(transactions.size()))
+                .andExpect(jsonPath("$.data[0].id").value(transaction1.getId()))
+                .andExpect(jsonPath("$.data[0].type").value(transaction1.getType()))
+                .andExpect(jsonPath("$.data[0].amount").value(transaction1.getAmount()))
+                .andExpect(jsonPath("$.data[0].date").value("2021-06-15 10:15:30"))
+                .andExpect(jsonPath("$.data[1].id").value(transaction2.getId()))
+                .andExpect(jsonPath("$.data[1].type").value(transaction2.getType()))
+                .andExpect(jsonPath("$.data[1].amount").value(transaction2.getAmount()))
+                .andExpect(jsonPath("$.data[1].date").value("2021-07-20 14:20:45"));
     }
 
     @Test
